@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { OctagonAlert, OctagonAlertIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
+import { FaGithub, FaGoogle } from "react-icons/fa";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import {
@@ -33,6 +34,7 @@ const formSchema = z.object({
 
 export const SignUpView = () => {
   const router = useRouter();
+  const { data: session } = authClient.useSession();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const form = useForm<z.infer<typeof formSchema>>({
@@ -45,6 +47,12 @@ export const SignUpView = () => {
     },
   });
 
+  useEffect(() => {
+    if (session) {
+      router.push("/");
+    }
+  }, [session, router]);
+
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     setError(null);
     setPending(true);
@@ -56,7 +64,6 @@ export const SignUpView = () => {
       },
       {
         onSuccess: () => {
-          router.push("/");
           setPending(false);
         },
         onError: ({ error }) => {
@@ -171,10 +178,20 @@ export const SignUpView = () => {
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <Button variant="outline" className="w-full" disabled={pending}>
+                  <Button variant="outline" className="w-full" disabled={pending} onClick={() => {
+                    authClient.signIn.social({
+                      provider: "google",
+                    });
+                  }}>
+                    <FaGoogle />
                     Google
                   </Button>
-                  <Button variant="outline" className="w-full" disabled={pending}>
+                  <Button variant="outline" className="w-full" disabled={pending} onClick={() => {
+                    authClient.signIn.social({
+                      provider: "github",
+                    });
+                  }}>
+                    <FaGithub />
                     GitHub
                   </Button>
                 </div>
